@@ -23,53 +23,53 @@ written against confirmed real response shapes instead of assumptions.
 
 ### Phase 1: Foundation
 
-- [ ] Task 1: Scaffold solution and projects
-- [ ] Task 2: Manual smoke test of Open-Meteo and Nager.Date
-- [ ] Task 3: Domain models and options
+- [x] Task 1: Scaffold solution and projects
+- [x] Task 2: Manual smoke test of Open-Meteo and Nager.Date
+- [x] Task 3: Domain models and options
 
 ### Checkpoint: Foundation
-- [ ] `dotnet build` succeeds
-- [ ] `dotnet test` runs (zero tests, zero failures)
-- [ ] Smoke-test findings documented; spec updated if any assumption was wrong
+- [x] `dotnet build` succeeds
+- [x] `dotnet test` runs (zero tests, zero failures)
+- [x] Smoke-test findings documented; spec updated if any assumption was wrong (no update needed — both confirmed)
 
 ### Phase 2: Rule Engine (pure business logic)
 
-- [ ] Task 4: RainProbabilityRule + unit tests
-- [ ] Task 5: WindSpeedRule + unit tests
-- [ ] Task 6: PublicHolidayRule + unit tests
-- [ ] Task 7: EventRuleEngine (aggregator) + unit tests
+- [x] Task 4: RainProbabilityRule + unit tests
+- [x] Task 5: WindSpeedRule + unit tests
+- [x] Task 6: PublicHolidayRule + unit tests
+- [x] Task 7: EventRuleEngine (aggregator) + unit tests
 
 ### Checkpoint: Rule Engine
-- [ ] All rule and engine unit tests pass
-- [ ] Zero HTTP/I/O dependencies anywhere in `Rules/`
-- [ ] Engine correctly flips to `NO_GO` on a blocking rule and never flips on the advisory rule alone
+- [x] All rule and engine unit tests pass
+- [x] Zero HTTP/I/O dependencies anywhere in `Rules/`
+- [x] Engine correctly flips to `NO_GO` on a blocking rule and never flips on the advisory rule alone
 
 ### Phase 3: External Clients
 
-- [ ] Task 8: OpenMeteoWeatherClient + unit tests
-- [ ] Task 9: NagerDateHolidayClient + unit tests
+- [x] Task 8: OpenMeteoWeatherClient + unit tests
+- [x] Task 9: NagerDateHolidayClient + unit tests
 
 ### Checkpoint: Clients
-- [ ] All client unit tests pass against the mocked `HttpMessageHandler` (success + failure cases)
-- [ ] No test makes a real network call
+- [x] All client unit tests pass against the mocked `HttpMessageHandler` (success + failure cases)
+- [x] No test makes a real network call
 
 ### Phase 4: Endpoint
 
-- [ ] Task 10: DI wiring, Options binding, Swagger setup
-- [ ] Task 11: POST /event-advisor endpoint, input validation, upstream-failure handling
+- [x] Task 10: DI wiring, Options binding, Swagger setup
+- [x] Task 11: POST /event-advisor endpoint, input validation, upstream-failure handling
 
 ### Checkpoint: Endpoint
-- [ ] `dotnet test` passes in full
-- [ ] Swagger UI loads at `/swagger` and documents the endpoint
-- [ ] Manual Swagger call with a valid payload returns a sensible verdict
+- [x] `dotnet test` passes in full
+- [x] Swagger UI loads at `/swagger` and documents the endpoint
+- [x] Manual Swagger call with a valid payload returns a sensible verdict
 
 ### Phase 5: Verification & Docs
 
-- [ ] Task 12: Manual end-to-end smoke test against live APIs (three scenarios)
-- [ ] Task 13: README
+- [x] Task 12: Manual end-to-end smoke test against live APIs (three scenarios)
+- [x] Task 13: README
 
 ### Checkpoint: Complete
-- [ ] All Success Criteria in the spec are met
+- [x] All Success Criteria in the spec are met
 - [ ] Ready for human review
 
 ## Risks and Mitigations
