@@ -11,9 +11,9 @@ public static class EventAdvisorEndpoints
     private const int MaxForecastHorizonDays = 15;
     private static readonly Regex CountryCodePattern = new("^[A-Za-z]{2}$", RegexOptions.Compiled);
 
-    public static void MapEventAdvisorEndpoints(this WebApplication app)
+    public static void MapEventAdvisorEndpoints(this WebApplication app, string rateLimitPolicy)
     {
-        app.MapPost("/event-advisor", HandleAsync);
+        app.MapPost("/event-advisor", HandleAsync).RequireRateLimiting(rateLimitPolicy);
     }
 
     private static async Task<IResult> HandleAsync(
@@ -21,8 +21,10 @@ public static class EventAdvisorEndpoints
         IWeatherClient weatherClient,
         IHolidayClient holidayClient,
         EventRuleEngine ruleEngine,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
+        var logger = loggerFactory.CreateLogger("EventAdvisorEndpoints");
         var errors = new Dictionary<string, string[]>();
         var eventDate = ValidateEventDate(request.EventDate, errors);
         ValidateLatitude(request.Latitude, errors);
@@ -41,8 +43,9 @@ public static class EventAdvisorEndpoints
         }
         catch (WeatherClientException ex)
         {
+            logger.LogError(ex, "Weather upstream (Open-Meteo) failed.");
             return Results.Problem(
-                detail: $"Weather upstream (Open-Meteo) failed: {ex.Message}",
+                detail: "The weather forecast service is currently unavailable. Please try again later.",
                 statusCode: StatusCodes.Status502BadGateway,
                 title: "Upstream weather service failure");
         }
@@ -54,8 +57,9 @@ public static class EventAdvisorEndpoints
         }
         catch (HolidayClientException ex)
         {
+            logger.LogError(ex, "Holiday upstream (Nager.Date) failed.");
             return Results.Problem(
-                detail: $"Holiday upstream (Nager.Date) failed: {ex.Message}",
+                detail: "The public holiday service is currently unavailable. Please try again later.",
                 statusCode: StatusCodes.Status502BadGateway,
                 title: "Upstream holiday service failure");
         }
