@@ -36,10 +36,12 @@ public static class EventAdvisorEndpoints
             return Results.ValidationProblem(errors);
         }
 
+        var validatedEventDate = eventDate!.Value;
+
         WeatherForecast weather;
         try
         {
-            weather = await weatherClient.GetForecastAsync(request.Latitude, request.Longitude, eventDate!.Value, cancellationToken);
+            weather = await weatherClient.GetForecastAsync(request.Latitude, request.Longitude, validatedEventDate, cancellationToken);
         }
         catch (WeatherClientException ex)
         {
@@ -53,7 +55,7 @@ public static class EventAdvisorEndpoints
         HolidayInfo holiday;
         try
         {
-            holiday = await holidayClient.GetHolidayInfoAsync(request.CountryCode, eventDate!.Value, cancellationToken);
+            holiday = await holidayClient.GetHolidayInfoAsync(request.CountryCode, validatedEventDate, cancellationToken);
         }
         catch (HolidayClientException ex)
         {
