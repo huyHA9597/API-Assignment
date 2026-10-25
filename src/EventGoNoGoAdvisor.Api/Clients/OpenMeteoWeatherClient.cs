@@ -13,7 +13,7 @@ public sealed class OpenMeteoWeatherClient : IWeatherClient
 
     public async Task<WeatherForecast> GetForecastAsync(double latitude, double longitude, DateOnly date, CancellationToken cancellationToken = default)
     {
-        var requestUri = $"/v1/forecast?latitude={latitude}&longitude={longitude}"
+        var requestUri = $"/v1/forecast?latitude={latitude.ToString(CultureInfo.InvariantCulture)}&longitude={longitude.ToString(CultureInfo.InvariantCulture)}"
             + "&daily=precipitation_probability_max,wind_speed_10m_max&forecast_days=16";
 
         HttpResponseMessage response;

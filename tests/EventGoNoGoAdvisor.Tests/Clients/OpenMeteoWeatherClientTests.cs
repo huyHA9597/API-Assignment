@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using EventGoNoGoAdvisor.Api.Clients;
@@ -86,5 +87,37 @@ public class OpenMeteoWeatherClientTests
             () => client.GetForecastAsync(40.7128, -74.0060, new DateOnly(2026, 11, 5)));
         Assert.Contains("2026-11-05", exception.Message);
         Assert.DoesNotContain("unexpected response shape", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetForecastAsync_BuildsRequestUriWithInvariantCultureCoordinates()
+    {
+        // String-interpolating a double uses CurrentCulture by default (e.g. "40,7128" under
+        // de-DE), which would corrupt the query string sent to Open-Meteo. Coordinates must be
+        // formatted with InvariantCulture regardless of the host's locale.
+        HttpRequestMessage? capturedRequest = null;
+        var client = CreateClient(request =>
+        {
+            capturedRequest = request;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(SuccessFixture, Encoding.UTF8, "application/json")
+            };
+        });
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+        try
+        {
+            await client.GetForecastAsync(40.7128, -74.0060, new DateOnly(2026, 11, 5));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
+        var query = capturedRequest!.RequestUri!.Query;
+        Assert.Contains("latitude=40.7128", query);
+        Assert.Contains("longitude=-74.006", query);
     }
 }
