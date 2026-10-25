@@ -6,7 +6,8 @@ for public holidays) into a single explainable **GO / NO_GO** decision for a
 proposed outdoor event.
 
 Idea: [docs/ideas/event-go-no-go-advisor.md](docs/ideas/event-go-no-go-advisor.md) ·
-Spec: [docs/specs/event-go-no-go-advisor.md](docs/specs/event-go-no-go-advisor.md)
+Spec: [docs/specs/event-go-no-go-advisor.md](docs/specs/event-go-no-go-advisor.md) ·
+Decisions: [docs/decisions/](docs/decisions/README.md)
 
 ## Running it
 
@@ -75,6 +76,10 @@ Two more live scenarios were verified manually during development (see
   never changed the verdict.
 
 ## Design decisions
+
+See [docs/decisions/](docs/decisions/README.md) for the full rationale and
+rejected alternatives behind the rule-engine shape, the choice of keyless
+upstream APIs, and the resource-abuse/info-leak hardening pass. Summary:
 
 - **Rules are pure, and tested without any HTTP involved.** `IEventRule.Evaluate(WeatherForecast, HolidayInfo)`
   takes already-fetched domain models, not raw API responses — the rule
@@ -168,6 +173,7 @@ tests/EventGoNoGoAdvisor.Tests/
 docs/
   ideas/event-go-no-go-advisor.md
   specs/event-go-no-go-advisor.md
+  decisions/                              -> ADRs: rule-engine shape, API choice, hardening
 tasks/
   plan.md, todo.md                        -> implementation plan and task-by-task notes/findings
 ```
