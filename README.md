@@ -101,79 +101,67 @@ Two more live scenarios were verified manually during development (see
   (All Saints' Day) — `PublicHolidayRule` triggered but, being advisory-only,
   never changed the verdict.
 
-## Design decisions
+### More sample requests
 
-See [docs/decisions/](docs/decisions/README.md) for the full rationale and
-rejected alternatives behind the rule-engine shape, the choice of keyless
-upstream APIs, and the resource-abuse/info-leak hardening pass. Summary:
+High rain forecast (expected `NO_GO` via `RainProbabilityRule`):
 
-- **Rules are pure, and tested without any HTTP involved.** `IEventRule.Evaluate(WeatherForecast, HolidayInfo)`
-  takes already-fetched domain models, not raw API responses — the rule
-  engine's correctness never depends on the network. `RainProbabilityRuleTests`,
-  `WindSpeedRuleTests`, `PublicHolidayRuleTests`, and `EventRuleEngineTests`
-  construct these models directly and never touch `HttpClient`.
-- **Blocking vs. advisory severity is enforced at the engine level, not by convention.**
-  `EventRuleEngine.Evaluate` only flips the verdict to `NO_GO` when a *triggered*
-  rule's `Severity` is `Blocking`. `PublicHolidayRule` is always `Advisory`, so a
-  holiday can never block an event by itself — it only surfaces a staffing/attendance
-  risk alongside the weather verdict. This mirrors how the business rule should
-  actually behave (a holiday doesn't ruin outdoor weather) and is covered directly
-  by `EventRuleEngineTests` using fake rules, independent of the real rule implementations.
-- **Thresholds are configuration, not constants.** `EventRuleThresholds` binds
-  from `appsettings.json` via `IOptions<T>`, so the 70%/40km/h defaults can be
-  tuned per environment without a code change or redeploy.
-- **Clients throw typed exceptions instead of returning nulls or default data.**
-  `WeatherClientException` / `HolidayClientException` surface as `502 Bad Gateway`
-  from the endpoint, explicitly naming which upstream failed. The endpoint never
-  falls back to a guessed verdict on upstream failure.
-- **A shared `FakeHttpMessageHandler` test helper** backs both client test suites,
-  so neither test suite needs a real network call, and mocking boilerplate isn't
-  duplicated across the two clients.
-- **`eventDate` is bound as a `string`, not `DateOnly`.** This keeps malformed-date
-  handling inside the endpoint's own validation (producing a field-level `400`
-  message) instead of failing during ASP.NET Core's model binding, where the
-  error shape can't be controlled as precisely.
+```
+POST /event-advisor
+{
+  "eventDate": "2026-10-27",
+  "latitude": 1.3521,
+  "longitude": 103.8198,
+  "countryCode": "SG"
+}
+```
 
-### A real bug this caught
+High wind forecast (expected `NO_GO` via `WindSpeedRule`):
 
-While manually smoke-testing the endpoint against live data (Task 11/12), a
-request for Paris briefly failed with a generic "unexpected response shape"
-error. The actual cause: Open-Meteo can return `null` for
-`precipitation_probability_max` on the later days of its 16-day forecast window
-(apparently data-freshness dependent, not a fixed day cutoff) even while
-`wind_speed_10m_max` for the same day is populated. `OpenMeteoWeatherClient`
-originally deserialized both arrays as non-nullable, so a `null` threw a
-`JsonException` that got reported with a misleading message. Fixed by
-deserializing to nullable arrays and throwing a specific "no complete forecast
-data yet for `{date}`" exception instead, with a regression test covering it
-(`GetForecastAsync_WhenRequestedDateHasNullForecastValues_ThrowsWeatherClientException`).
+```
+POST /event-advisor
+{
+  "eventDate": "2026-11-10",
+  "latitude": 51.5074,
+  "longitude": -0.1278,
+  "countryCode": "GB"
+}
+```
 
-## Left out, and why
+Public holiday with clear weather (expected `GO` with an advisory reason):
 
-Mirroring the idea doc's [Not Doing](docs/ideas/event-go-no-go-advisor.md#not-doing-and-why) list:
+```
+POST /event-advisor
+{
+  "eventDate": "2026-11-01",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "countryCode": "FR"
+}
+```
 
-- **Geocoding from city/address text** — would add a third external dependency
-  for a take-home; the caller supplies coordinates and a country code directly.
-- **Multi-date "best date in range" recommendation** — a single date in, single
-  verdict out, per the spec. Recommending across a range is a distinct feature,
-  not core to proving the rule-engine design.
-- **Persistence / a database** — the API is stateless request-in/response-out;
-  nothing here needs to be stored.
-- **Caching / retry policies** — every request makes a fresh call to both
-  upstream APIs with no retry on transient failure. This is a known production
-  gap, acceptable for a take-home exercise, but would matter under real load.
-- **Auth on the endpoint** — out of scope for an integration-logic exercise;
-  both upstream APIs are keyless, so there's nothing to protect yet.
-- **Live validation of `countryCode` against Nager.Date's `AvailableCountries` list** —
-  the spec called this out as "if practical." The endpoint validates only the
-  ISO 3166-1 alpha-2 *format* (two letters); an unrecognized-but-well-formed code
-  surfaces as a `502` from the holiday client instead of an immediate `400`. The
-  smoke test confirmed `AvailableCountries` is reachable, if this is wanted later.
-- **Regional-only holidays** — Nager.Date returns some holidays with a non-null
-  `counties` list (observed for the US, e.g. "Lincoln's Birthday"), meaning
-  they're not nationwide. `PublicHolidayRule`/`NagerDateHolidayClient` currently
-  treat any date match as a holiday regardless of region — a reasonable
-  simplification for this scope, called out here rather than silently assumed.
+Malformed date (expected `400` field-level validation error):
+
+```
+POST /event-advisor
+{
+  "eventDate": "not-a-date",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "countryCode": "US"
+}
+```
+
+Unrecognized but well-formed country code (expected `502` from the holiday client):
+
+```
+POST /event-advisor
+{
+  "eventDate": "2026-11-05",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "countryCode": "ZZ"
+}
+```
 
 ## Project structure
 
