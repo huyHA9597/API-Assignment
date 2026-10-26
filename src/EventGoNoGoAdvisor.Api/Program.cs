@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
@@ -85,6 +87,7 @@ app.Use(async (context, next) =>
 
 app.UseRateLimiter();
 
+app.MapDefaultEndpoints();
 app.MapEventAdvisorEndpoints(EventAdvisorRateLimitPolicy);
 
 app.Run();
