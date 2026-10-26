@@ -23,6 +23,32 @@ dotnet run --project src/EventGoNoGoAdvisor.Api
 Swagger UI is available at `/swagger` when running in the Development environment
 (the default for `dotnet run`).
 
+### Running with telemetry (Aspire Dashboard)
+
+To see live traces, metrics, and logs for the API, run it through the Aspire
+AppHost instead:
+
+```bash
+dotnet run --project src/EventGoNoGoAdvisor.AppHost
+```
+
+This prints a Dashboard URL (with a one-time login token) to the console.
+Open it, send a request to `/event-advisor`, and the dashboard shows:
+- **Traces** — the inbound request span plus child spans for the outbound
+  Open-Meteo and Nager.Date calls.
+- **Metrics** — ASP.NET Core request metrics, `HttpClient` metrics, and
+  .NET runtime metrics (GC, thread pool, exceptions).
+- **Logs** — correlated to the trace id for that request.
+
+Running the API standalone (`dotnet run --project src/EventGoNoGoAdvisor.Api`,
+no AppHost) still works exactly as before — the OTLP exporter only activates
+when an endpoint is configured, so there's no dashboard dependency and no
+exporter errors without it.
+
+See [ADR-004](docs/decisions/004-telemetry-via-aspire-service-defaults.md)
+for why this uses Aspire's `ServiceDefaults` pattern with auto-instrumentation
+only (no custom business metrics, no third-party APM backend).
+
 ## Sample request/response
 
 Captured against the live Open-Meteo and Nager.Date APIs:
@@ -166,14 +192,19 @@ src/EventGoNoGoAdvisor.Api/
   Models/
     WeatherForecast.cs, HolidayInfo.cs, RuleReason.cs, EventAdvisorContracts.cs
   Options/EventRuleThresholds.cs          -> bound from appsettings.json
+src/EventGoNoGoAdvisor.ServiceDefaults/
+  Extensions.cs                           -> OpenTelemetry + health-check wiring (see ADR-004)
+src/EventGoNoGoAdvisor.AppHost/
+  AppHost.cs                              -> orchestrates the Api + Aspire Dashboard
 tests/EventGoNoGoAdvisor.Tests/
   Rules/*Tests.cs                         -> pure unit tests, no HTTP
   Clients/*Tests.cs                       -> mocked HttpMessageHandler, no real network calls
   TestHelpers/FakeHttpMessageHandler.cs
 docs/
   ideas/event-go-no-go-advisor.md
-  specs/event-go-no-go-advisor.md
-  decisions/                              -> ADRs: rule-engine shape, API choice, hardening
+  specs/event-go-no-go-advisor.md, telemetry-observability-aspire.md
+  decisions/                              -> ADRs: rule-engine shape, API choice, hardening, telemetry
 tasks/
-  plan.md, todo.md                        -> implementation plan and task-by-task notes/findings
+  plan.md, todo.md                        -> base feature's implementation plan and task notes
+  plan-telemetry.md, todo-telemetry.md    -> telemetry feature's implementation plan and task notes
 ```
