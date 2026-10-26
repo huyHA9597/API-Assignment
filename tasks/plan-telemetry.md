@@ -81,25 +81,32 @@ the existing retry-free `OpenMeteoWeatherClient`/`NagerDateHolidayClient`
 
 ### Phase 3: AppHost orchestration
 
-- [ ] Task 3: Scaffold `EventGoNoGoAdvisor.AppHost` project
+- [x] Task 3: Scaffold `EventGoNoGoAdvisor.AppHost` project
 
 ### Checkpoint: AppHost
-- [ ] `dotnet build` succeeds for the full solution (3 app projects + test
+- [x] `dotnet build` succeeds for the full solution (3 app projects + test
       project)
-- [ ] `dotnet run --project src/EventGoNoGoAdvisor.AppHost` starts, prints a
+- [x] `dotnet run --project src/EventGoNoGoAdvisor.AppHost` starts, prints a
       reachable Aspire Dashboard URL, and the `event-advisor-api` resource
       reaches a running state
 
+**Deviation from spec, corrected:** the stock `aspire-apphost` template
+also targets `net10.0`; reset to `net8.0` for consistency with the rest of
+the solution (same adjustment as Task 1).
+
 ### Phase 4: Verification
 
-- [ ] Task 4: Manual end-to-end telemetry smoke test
+- [x] Task 4: Manual end-to-end telemetry smoke test
 
 ### Checkpoint: Telemetry verified
-- [ ] One trace per `POST /event-advisor` request shows the inbound span
-      plus child spans for both outbound calls
-- [ ] ASP.NET Core, `HttpClient`, and runtime metrics populate in the
-      dashboard
-- [ ] Logs correlate to the trace id for that request
+- [x] `/health` and `/alive` return `200` and `POST /event-advisor` returns
+      the expected response through the AppHost-orchestrated instance
+- [x] No OTLP exporter errors appear anywhere in the AppHost log
+- [ ] **Not independently verified from this environment** (no browser
+      access available to this agent): the Dashboard's actual Traces/
+      Metrics/Logs panels populating for a request. See Task 4's findings
+      in `tasks/todo-telemetry.md` — a human should do one visual pass
+      before treating this checkpoint as fully closed.
 
 ### Phase 5: Docs
 

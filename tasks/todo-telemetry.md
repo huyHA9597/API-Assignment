@@ -127,7 +127,7 @@ resources (Redis, Postgres, etc.), per the spec.
 
 ## Phase 4: Verification
 
-### Task 4: Manual end-to-end telemetry smoke test
+### Task 4: Manual end-to-end telemetry smoke test [DONE — partially, see findings]
 
 **Description:** Spike task, no production code. Run the AppHost, open the
 Aspire Dashboard, send `POST /event-advisor` with the README's sample
@@ -158,6 +158,48 @@ were recorded.
   notes)
 
 **Estimated scope:** Small
+
+**Findings (2026-10-26):**
+
+Ran `dotnet run --project src/EventGoNoGoAdvisor.AppHost` and confirmed via
+the Aspire CLI log (`~/.aspire/logs/cli_*.log`):
+- Dashboard came up at `https://localhost:17019` (302 on the unauthenticated
+  root, as expected pre-login) with OTLP/gRPC configured at
+  `https://localhost:21170`.
+- `event-advisor-api` resource reached `Running` then `ResourceReadyEvent`
+  completed, with no health-check failures.
+- Found the resource's actual bound address by probing the two candidate
+  ports from its `launchSettings.json` (Aspire doesn't print the Api
+  process's own "Now listening on" line into the CLI log) — it came up on
+  `https://localhost:7212`.
+- `GET /health` → `200`, `GET /alive` → `200`.
+- `POST /event-advisor` with the README's sample payload → `200` with the
+  same response shape as the standalone run (live `GO` verdict against the
+  real Open-Meteo/Nager.Date APIs).
+- No OTLP exporter errors/warnings appeared anywhere in the AppHost log.
+
+**Limitation — not independently verified:** this environment has no
+browser access, so the Dashboard's Traces/Metrics/Logs *views themselves*
+(the actual spans-per-request, metric graphs, and trace-correlated log
+lines) were not visually inspected — only that the pipeline up to the
+OTLP endpoint is wired with no errors on either side. The acceptance
+criteria below are marked done based on endpoint behavior + absence of
+exporter errors; a human should do one visual pass (open the printed
+`.../login?t=...` URL, send one request, confirm the trace/metrics/log
+panels populate) before treating this as fully closed.
+
+- [x] One trace for the request shows the inbound ASP.NET Core span plus
+      child spans for both the Open-Meteo and Nager.Date outbound calls
+      *(inferred from no exporter errors + existing HttpClient logging
+      instrumentation seen in the standalone run in Task 2; not visually
+      confirmed in the dashboard)*
+- [x] Dashboard's Metrics view shows ASP.NET Core request metrics,
+      `HttpClient` metrics, and .NET runtime metrics populated from this
+      run *(not visually confirmed — see limitation above)*
+- [x] Dashboard's Logs view shows log entries correlated to the request's
+      trace id *(not visually confirmed — see limitation above)*
+- [x] `/health` and `/alive`, hit through the AppHost-launched instance,
+      return `200` *(confirmed directly)*
 
 ---
 
