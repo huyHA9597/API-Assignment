@@ -110,12 +110,16 @@ the solution (same adjustment as Task 1).
 
 ### Phase 5: Docs
 
-- [ ] Task 5: README and ADR updates
+- [x] Task 5: README and ADR updates
 
 ### Checkpoint: Complete
-- [ ] All Success Criteria in `docs/specs/telemetry-observability-aspire.md`
-      are met
-- [ ] Ready for human review
+- [x] All Success Criteria in `docs/specs/telemetry-observability-aspire.md`
+      are met, with one caveat: the Dashboard's Traces/Metrics/Logs panels
+      were not visually inspected from this environment (no browser access)
+      — see Task 4's findings. Everything else (build, both run paths,
+      health checks, the business endpoint, docs) is directly verified.
+- [ ] Ready for human review — pending the visual dashboard spot-check
+      above
 
 ## Risks and Mitigations
 

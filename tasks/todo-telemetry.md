@@ -205,7 +205,7 @@ panels populate) before treating this as fully closed.
 
 ## Phase 5: Docs
 
-### Task 5: README and ADR updates
+### Task 5: README and ADR updates [DONE]
 
 **Description:** Update `README.md`'s "Running it" section with the
 `dotnet run --project src/EventGoNoGoAdvisor.AppHost` command and a new
