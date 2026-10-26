@@ -4,7 +4,7 @@ Plan: [tasks/plan-telemetry.md](plan-telemetry.md) · Spec: [docs/specs/telemetr
 
 ## Phase 1: ServiceDefaults foundation
 
-### Task 1: Scaffold `EventGoNoGoAdvisor.ServiceDefaults` project
+### Task 1: Scaffold `EventGoNoGoAdvisor.ServiceDefaults` project [DONE]
 
 **Description:** Create `src/EventGoNoGoAdvisor.ServiceDefaults`, a plain
 `net8.0` class-library-style SDK project (`Nullable` enabled,
@@ -48,7 +48,7 @@ the spec.
 
 ## Phase 2: Wire into the API
 
-### Task 2: Reference `ServiceDefaults` from `Api` and wire `Program.cs`
+### Task 2: Reference `ServiceDefaults` from `Api` and wire `Program.cs` [DONE]
 
 **Description:** Add a project reference from
 `EventGoNoGoAdvisor.Api.csproj` to `ServiceDefaults`, then call

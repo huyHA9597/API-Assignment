@@ -51,24 +51,33 @@ manual end-to-end telemetry smoke test, then docs. No business logic
 
 ### Phase 1: ServiceDefaults foundation
 
-- [ ] Task 1: Scaffold `EventGoNoGoAdvisor.ServiceDefaults` project
+- [x] Task 1: Scaffold `EventGoNoGoAdvisor.ServiceDefaults` project
 
 ### Checkpoint: ServiceDefaults
-- [ ] `dotnet build` succeeds for the new project and the whole solution
-- [ ] No other project references it yet — isolated build only
+- [x] `dotnet build` succeeds for the new project and the whole solution
+- [x] No other project references it yet — isolated build only
+
+**Deviation from spec, corrected:** the stock `aspire-servicedefaults`
+template (Aspire.ProjectTemplates 13.6.4, installed for this task) targets
+`net10.0` and wires `Microsoft.Extensions.Http.Resilience`'s standard
+resilience handler onto every `HttpClient` by default. Both were reverted
+to match the approved spec: `TargetFramework` set back to `net8.0`, and the
+resilience-handler package/`ConfigureHttpClientDefaults` block removed so
+the existing retry-free `OpenMeteoWeatherClient`/`NagerDateHolidayClient`
+(ADR 002) aren't silently given retry behavior.
 
 ### Phase 2: Wire into the API
 
-- [ ] Task 2: Reference `ServiceDefaults` from `Api` and wire `Program.cs`
+- [x] Task 2: Reference `ServiceDefaults` from `Api` and wire `Program.cs`
 
 ### Checkpoint: API wiring
-- [ ] `dotnet build` succeeds
-- [ ] `dotnet test` passes unchanged (zero regressions)
-- [ ] `dotnet run --project src/EventGoNoGoAdvisor.Api` (standalone, no
+- [x] `dotnet build` succeeds
+- [x] `dotnet test` passes unchanged (19/19, zero regressions)
+- [x] `dotnet run --project src/EventGoNoGoAdvisor.Api` (standalone, no
       `OTEL_EXPORTER_OTLP_ENDPOINT`) starts cleanly, no exporter errors in
       the console
-- [ ] `/swagger` and `POST /event-advisor` behave exactly as before
-- [ ] `/health` and `/alive` return `200` in Development
+- [x] `/swagger` and `POST /event-advisor` behave exactly as before
+- [x] `/health` and `/alive` return `200` in Development
 
 ### Phase 3: AppHost orchestration
 
