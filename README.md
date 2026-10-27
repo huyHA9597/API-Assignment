@@ -50,6 +50,53 @@ See [ADR-004](docs/decisions/004-telemetry-via-aspire-service-defaults.md)
 for why this uses Aspire's `ServiceDefaults` pattern with auto-instrumentation
 only (no custom business metrics, no third-party APM backend).
 
+### Running with Docker
+
+Requires Docker Desktop (or another Docker Compose v2–compatible engine).
+
+One-time setup — generate a local HTTPS dev certificate (skip if you already
+have one from running `dotnet dev-certs https` for other projects):
+
+```bash
+dotnet dev-certs https -ep "${USERPROFILE}/.aspnet/https/aspnetapp.pfx" -p devpassword
+```
+
+Then build and run:
+
+```bash
+docker compose up --build
+```
+
+This serves the API on `http://localhost:8080` and `https://localhost:8081`
+(using the dev cert above), with Swagger at
+`https://localhost:8081/swagger`. The container defaults to
+`ASPNETCORE_ENVIRONMENT=Development` — same as plain `dotnet run` — so
+Swagger and the `/health`/`/alive` endpoints stay reachable. This is a
+development-profile image, not a hardened production one; a separate
+hardened Production container profile is tracked as future work.
+
+The `devpassword` default in `docker-compose.yml` matches the cert generated
+above and is a local-only placeholder, not a real secret — the cert it
+unlocks is self-signed and only trusted by your own machine. If you generate
+the cert with a different password, override it by setting
+`DEV_CERT_PASSWORD` before running `docker compose up`.
+
+To build the image directly (without Compose):
+
+```bash
+docker build -t event-advisor-api -f src/EventGoNoGoAdvisor.Api/Dockerfile .
+```
+
+`EventGoNoGoAdvisor.AppHost`'s `event-advisor-api` resource is also wired
+(via `PublishAsDockerFile`) to this same Dockerfile for container-based
+publish/deployment manifests — this only affects `aspire publish` /
+manifest generation, not plain `dotnet run --project src/EventGoNoGoAdvisor.AppHost`,
+which still runs the API as a regular local process exactly as before.
+
+See [docs/specs/docker-containerization.md](docs/specs/docker-containerization.md)
+for the full spec, decisions, and what's deliberately out of scope (a
+hardened production profile, CI image builds, registry publishing).
+
 ## Sample request/response
 
 Captured against the live Open-Meteo and Nager.Date APIs:
@@ -168,7 +215,10 @@ POST /event-advisor
 
 ```
 EventGoNoGoAdvisor.sln
+.dockerignore                             -> keeps docker build context small (excludes bin/obj/tests/docs/etc.)
+docker-compose.yml                        -> builds + runs the Api with HTTP + HTTPS (dev cert) mapped
 src/EventGoNoGoAdvisor.Api/
+  Dockerfile                              -> multi-stage build (sdk:8.0 -> aspnet:8.0-alpine), non-root user
   Program.cs                              -> DI wiring, Options binding, Swagger, endpoint mapping
   Endpoints/EventAdvisorEndpoints.cs      -> POST /event-advisor: validation + orchestration
   Clients/
@@ -184,18 +234,20 @@ src/EventGoNoGoAdvisor.Api/
 src/EventGoNoGoAdvisor.ServiceDefaults/
   Extensions.cs                           -> OpenTelemetry + health-check wiring (see ADR-004)
 src/EventGoNoGoAdvisor.AppHost/
-  AppHost.cs                              -> orchestrates the Api + Aspire Dashboard
+  AppHost.cs                              -> orchestrates the Api + Aspire Dashboard; wires the Api
+                                              resource to the Dockerfile above for container publish
 tests/EventGoNoGoAdvisor.Tests/
   Rules/*Tests.cs                         -> pure unit tests, no HTTP
   Clients/*Tests.cs                       -> mocked HttpMessageHandler, no real network calls
   TestHelpers/FakeHttpMessageHandler.cs
 docs/
   ideas/event-go-no-go-advisor.md
-  specs/event-go-no-go-advisor.md, telemetry-observability-aspire.md
+  specs/event-go-no-go-advisor.md, telemetry-observability-aspire.md, docker-containerization.md
   decisions/                              -> ADRs: rule-engine shape, API choice, hardening, telemetry
   diagram/architecture.md                 -> component diagram of src/
   diagram/sequence-event-advisor.md       -> sequence diagram of POST /event-advisor
 tasks/
   plan.md, todo.md                        -> base feature's implementation plan and task notes
   plan-telemetry.md, todo-telemetry.md    -> telemetry feature's implementation plan and task notes
+  plan-docker.md, todo-docker.md          -> Docker containerization feature's plan and task notes
 ```

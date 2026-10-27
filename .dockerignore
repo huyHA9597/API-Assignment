@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.git/
+.vs/
+.idea/
+tests/
+tasks/
+docs/
+*.user
+.DS_Store
+Thumbs.db
