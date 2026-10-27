@@ -7,7 +7,8 @@ proposed outdoor event.
 
 Idea: [docs/ideas/event-go-no-go-advisor.md](docs/ideas/event-go-no-go-advisor.md) ·
 Spec: [docs/specs/event-go-no-go-advisor.md](docs/specs/event-go-no-go-advisor.md) ·
-Decisions: [docs/decisions/](docs/decisions/README.md)
+Decisions: [docs/decisions/](docs/decisions/README.md) ·
+Diagrams: [architecture](docs/diagram/architecture.md) ([PNG](docs/diagram/architecture.png)), [sequence](docs/diagram/sequence-event-advisor.md) ([PNG](docs/diagram/sequence-event-advisor.png))
 
 ## Running it
 
@@ -192,6 +193,8 @@ docs/
   ideas/event-go-no-go-advisor.md
   specs/event-go-no-go-advisor.md, telemetry-observability-aspire.md
   decisions/                              -> ADRs: rule-engine shape, API choice, hardening, telemetry
+  diagram/architecture.md                 -> component diagram of src/
+  diagram/sequence-event-advisor.md       -> sequence diagram of POST /event-advisor
 tasks/
   plan.md, todo.md                        -> base feature's implementation plan and task notes
   plan-telemetry.md, todo-telemetry.md    -> telemetry feature's implementation plan and task notes
